@@ -1,0 +1,98 @@
+﻿params hangul
+
+// Type hangul character, note that on iOS9 you can also mix ASCII/Western chars
+
+// Set logging to minimal unless debugging
+if debugTyping is not true
+	set sl to the scriptlogging
+	set the scriptlogging to minimal
+end if
+
+set ScreenSize = RemoteScreenSize()
+
+// Globals used by the numKeyPosn function.
+global cell_w
+global cell_h
+
+set devType = "iPhone" // default device type
+
+// set values for each screen size. Due to the variations there is no simple way to calculate these so
+// just set them for each size and orientation
+if ScreenSize = (640, 1008) // iPhone 4 portrait
+	set ScreenSize = (640, 960) // set to actual size removing the eggOn control line
+	set cell_h = 108
+	
+else if ScreenSize = (960, 688) // iPhone 4 landscape
+	set ScreenSize = (960, 640) // set to actual size removing the eggOn control line
+	set cell_h = 82
+	
+else if ScreenSize = (640,1136) // iPhone 5 portrait
+	set cell_h = 108
+	
+else if ScreenSize = (1136,640) // iPhone 5 landscape
+	set cell_h = 82
+	
+else if ScreenSize = (750, 1334) // iPhone 6 portrait
+	set KP_y = 900
+	set cell_h = (ScreenSize.y - KP_y) / 4
+	
+else if ScreenSize = (1334, 750) // iPhone 6 Landscape
+	set KP_y = 428
+	set cell_h = (ScreenSize.y - KP_y) / 4
+	
+else if ScreenSize = (1242, 2208) // iPhone 6+ portrait
+	set cell_h = 168
+	
+else if ScreenSize = (2208, 1242) // iPhone 6+ landscape
+	set cell_h = 150 // currently a guess
+	
+else if ScreenSize = (2048,1536) // iPad landscape
+	set devType = "iPad"
+	set cell_h = 140
+	
+else if ScreenSize = (1536, 2048) // iPad portrait
+	set cell_h = 105
+	set devType = "iPad"
+else
+	logerror "screen size " && ScreenSize && "not handled"
+	exit handler
+end if
+
+
+if devType is "iPhone"
+	set keyWidth =  ScreenSize.x div 10 // portrait keys, 10 wide
+else
+	set keyWidth =  ScreenSize.x div 11 // portrait keys, 10 wide
+end if
+
+set row1Y = ScreenSize.y - (cell_h*3.5)
+set row2Y = row1Y + cell_h
+set row3Y = row2Y + cell_h
+set row4Y = row3Y + cell_h
+
+set row1X = keyWidth div 2
+set row2X = keyWidth
+set row3X = row2X +  keyWidth
+
+set row1Chars = "ㅂㅈㄷㄱ쇼ㅕㅑㅐㅔ"
+set row2Chars = "ㅁㄴㅇㄹㅎㅗㅓㅏㅣ"
+set row3Chars = "ㅋㅌㅊㅍㅠㅜㅡ"
+
+repeat with c = each character of hangul
+	if c is in row1Chars then
+		set x = row1X + (offset of c in row1Chars -1) * keyWidth
+		set y = row1Y
+	else if c is in row2Chars then
+		set x = row2X + (offset of c in row2Chars -1) * keyWidth
+		set y = row2Y
+	else if c is in row3Chars then
+		set x = row3X + (offset of c in row3Chars -1) * keyWidth
+		set y = row3Y
+	else 
+		TypeText c // This works with iOS9 but probably not with iOS7/8
+		Next repeat
+	end if
+	
+	tap (x, y)
+	
+end repeat
